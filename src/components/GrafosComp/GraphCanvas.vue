@@ -79,7 +79,7 @@
         stroke-dasharray="5"
       />
 
-      <!-- NODOS -->
+      <!-- NODOS 1-->
       <g
   v-for="node in nodes"
   :key="node.id"

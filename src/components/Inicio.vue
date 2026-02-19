@@ -15,7 +15,6 @@
       <h1>Algoritmos</h1>
     </div>
 
-    
     <div class="info">
       <p><strong>Materia:</strong> Analisis de Algoritmos</p>
       <p><strong>Docente:</strong> Yamil Cardenas</p>
