@@ -109,7 +109,7 @@
   {{ node.label}}
 </text>
 
-      </g>
+</g>
 
     </svg>
   </div>
@@ -217,23 +217,30 @@ function handleCanvasClick(e) {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
+  let name = ""
+  while (!name) {
+    name = prompt("Nombre del nodo (no puede estar vacío):", "")
+    if (name === null) return 
+    name = name.trim()        
+  }
+
   const newNode = {
     id: Date.now(),
     x,
     y,
-    label: props.nodes.length,    
+    label: name,
     color: props.selectedColor
   }
 
   emit('updateNodes', [...props.nodes, newNode])
 }
 
-
 /* =========================
    INTERACCIÓN CON NODOS
 ========================= */
 
 function handleNodeClick(node) {
+
 
   if (props.mode === 'delete') {
     emit('updateNodes', props.nodes.filter(n => n.id !== node.id))
@@ -246,13 +253,29 @@ function handleNodeClick(node) {
 
   if (props.mode !== 'draw') return
 
- 
   if (!selectedNode.value) {
+   
+    if (!node.label || node.label === "") {
+      const name = prompt("Nombre del nodo:", "")
+      node.label = name || ""  
+      const updatedNodes = props.nodes.map(n =>
+        n.id === node.id ? { ...n, label: node.label } : n
+      )
+      emit('updateNodes', updatedNodes)
+    }
+
     selectedNode.value = node
     return
   }
 
-  const weight = prompt("Peso de la arista:", "1")
+  let weight = prompt("Peso de la arista (solo números):", "1")
+
+  if (isNaN(weight) || weight === "" || weight === null) {
+    alert("¡Ingresa solo números para el peso!")
+    selectedNode.value = null
+    tempConnection.value = null
+    return
+  }
 
   const exists = props.edges.some(e =>
     props.directed
@@ -269,11 +292,12 @@ function handleNodeClick(node) {
     return
   }
 
+ 
   const newEdge = {
     id: Date.now(),
     from: selectedNode.value.id,
     to: node.id,
-    weight: weight || 1,
+    weight: Number(weight),
     color: props.selectedColor
   }
 
