@@ -4,23 +4,27 @@
     <h3>Modo</h3>
 
     <div class="button-group">
-      <button 
-        :class="{ active: mode === 'draw' }"
-        @click="$emit('changeMode', 'draw')">
-        Dibujar
-      </button>
+     <button 
+  :class="{ active: mode === 'draw' }"
+  @click="$emit('changeMode', 'draw')">
+  <i class="fas fa-pencil-alt icon"></i>
+  Dibujar
+</button>
 
-      <button 
-        :class="{ active: mode === 'edit' }"
-        @click="$emit('changeMode', 'edit')">
-        Editar
-      </button>
+<button 
+  :class="{ active: mode === 'edit' }"
+  @click="$emit('changeMode', 'edit')">
+  <i class="fas fa-pen icon"></i>
+  Editar
+</button>
 
-      <button 
-        :class="{ active: mode === 'delete' }"
-        @click="$emit('changeMode', 'delete')">
-        Borrar
-      </button>
+<button 
+  :class="{ active: mode === 'delete' }"
+  @click="$emit('changeMode', 'delete')">
+  <i class="fas fa-eraser icon"></i>
+  Borrar
+</button>
+
 
       
     </div>
@@ -118,7 +122,6 @@ button.active {
   flex-direction: column;
   gap: 10px;
 }
-
 
 .matrix-btn {
   margin-top: 5px;
