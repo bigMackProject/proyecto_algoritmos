@@ -38,69 +38,87 @@ export class Grafo {
     return map
   }
 
-  getAdjacencyMatrix() {
-    const size = this.nodes.length
-    const matrix = Array.from({ length: size }, () =>
-      Array(size).fill(0)
-    )
 
-    const nodeIndex = this.getNodeIndexMap()
+  generarAnalisisAdyacencia() {
+  console.log("===== INICIO generarAnalisisAdyacencia =====")
 
-    this.edges.forEach(edge => {
-      const i = nodeIndex[edge.from]
-      const j = nodeIndex[edge.to]
-      const weight = Number(edge.weight) || 1
+  console.log("NODOS:", this.nodes)
+  console.log("ARISTAS:", this.edges)
+  console.log("DIRIGIDO:", this.directed)
 
-      matrix[i][j] += weight
+  const size = this.nodes.length
+  console.log("SIZE:", size)
 
-      if (!this.directed) {
-        matrix[j][i] += weight
-      }
-    })
+  const matrix = Array.from({ length: size }, () =>
+    Array(size).fill(0)
+  )
 
-    return matrix
-  }
+  console.log("MATRIX INICIAL:", matrix)
 
-  getTransitionMatrix() {
-    const matrix = this.getAdjacencyMatrix()
-    const size = matrix.length
+  const indexMap = this.getNodeIndexMap()
+  console.log("INDEX MAP:", indexMap)
 
-    const transition = matrix.map(row => [...row])
+  // Llenar matriz
+  this.edges.forEach(edge => {
+    const i = indexMap[edge.from]
+    const j = indexMap[edge.to]
+    const weight = Number(edge.weight) || 1
 
-    for (let i = 0; i < size; i++) {
-      const rowSum = transition[i].reduce((a, b) => a + b, 0)
+    console.log("Procesando arista:", edge)
+    console.log("i:", i, "j:", j, "weight:", weight)
 
-      if (rowSum > 0) {
-        for (let j = 0; j < size; j++) {
-          transition[i][j] = transition[i][j] / rowSum
-        }
-      }
+    if (i === undefined || j === undefined) {
+      console.error("ERROR: índice undefined", { i, j, edge })
+      return
     }
 
-    return transition
+    matrix[i][j] += weight
+
+    if (!this.directed) {
+      matrix[j][i] += weight
+    }
+  })
+
+  console.log("MATRIX DESPUÉS DE LLENAR:", matrix)
+
+  // Suma filas
+  const rowSums = matrix.map(row =>
+    row.reduce((a, b) => a + b, 0)
+  )
+
+  console.log("ROW SUMS:", rowSums)
+
+  // Suma columnas
+  const colSums = Array(size).fill(0)
+  for (let j = 0; j < size; j++) {
+    for (let i = 0; i < size; i++) {
+      colSums[j] += matrix[i][j]
+    }
   }
 
-  generarMatrizAdyacencia() {
-    const size = this.nodes.length
+  console.log("COL SUMS:", colSums)
 
-    const matrix = Array.from({ length: size }, () =>
-      Array(size).fill(0)
-    )
+  const maxRow = rowSums.length ? Math.max(...rowSums) : 0
+  const maxCol = colSums.length ? Math.max(...colSums) : 0
 
-    this.edges.forEach(edge => {
-      const from = this.nodes.find(n => n.id === edge.from)
-      const to = this.nodes.find(n => n.id === edge.to)
+  console.log("MAX ROW:", maxRow)
+  console.log("MAX COL:", maxCol)
 
-      if (!from || !to) return
+  const labels = this.nodes.map(n => n.label)
+  console.log("LABELS:", labels)
 
-      matrix[from.label][to.label] = Number(edge.weight)
-
-      if (!this.directed) {
-        matrix[to.label][from.label] = Number(edge.weight)
-      }
-    })
-
-    return matrix
+  const resultado = {
+    matrix,
+    rowSums,
+    colSums,
+    maxRow,
+    maxCol,
+    labels
   }
+
+  console.log("RESULTADO FINAL:", resultado)
+  console.log("===== FIN generarAnalisisAdyacencia =====")
+
+  return resultado
 }
-
+}

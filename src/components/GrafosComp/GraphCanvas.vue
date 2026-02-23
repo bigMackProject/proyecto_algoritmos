@@ -112,6 +112,7 @@
 </g>
 
     </svg>
+
   </div>
 </template>
 
@@ -414,4 +415,5 @@ function edgeLabelPosition(edge) {
   width: 100%;
   height: 100%;
 }
+
 </style>

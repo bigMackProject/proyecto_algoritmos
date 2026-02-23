@@ -1,4 +1,5 @@
 <template>
+  
   <div class="panel">
 
     <h3>Modo</h3>
@@ -24,9 +25,13 @@
   <i class="fas fa-eraser icon"></i>
   Borrar
 </button>
-
-
-      
+<button 
+  class="matrix-btn"
+  @click="$emit('generateMatrix')">
+  <i class="fas fa-table icon"></i>
+  Generar
+</button>
+  
     </div>
 
     <hr />
@@ -45,6 +50,7 @@
         @click="$emit('toggleDirected', true)">
         Dirigido
       </button>
+      
     </div>
 
     <hr />
@@ -65,6 +71,12 @@
   </div>
 </template>
 <script setup>
+const emit = defineEmits([
+  'changeMode',
+  'toggleDirected',
+  'changeColor',
+  'generateMatrix'
+])
 defineProps(['mode', 'directed', 'selectedColor'])
 
 const palette = [
