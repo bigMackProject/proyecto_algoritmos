@@ -21,7 +21,8 @@
       @changeColor="selectedColor = $event"
       @generateMatrix="generarMatriz"
       @updateMode="mode = $event"
-      
+      @exportar="exportarJSON"
+      @importar="importarJSON"
     />
 
   </div>
@@ -70,6 +71,56 @@
       <p>Máx Filas: {{ matrixData.maxRow }}</p>
       <p>Máx Columnas: {{ matrixData.maxCol }}</p>
     </div>
+    
+
+        <h3 style="margin-top:20px;">Conexiones por Nodo (Cantidad ≠ 0)</h3>
+
+    <div class="bars-container">
+
+      <!-- Salida -->
+      <div 
+        v-for="(count, index) in matrixData.rowCounts" 
+        :key="'row-' + index"
+        class="bar-row"
+      >
+        <span class="label">
+          {{ matrixData.labels[index] }} (Salida)
+        </span>
+
+        <div class="bar-wrapper">
+          <div 
+            class="bar bar-out"
+            :style="{ width: (count / maxConnections * 100) + '%' }"
+          ></div>
+          <span class="value">{{ count }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 style="margin-top:20px;">Conexiones Entrantes</h3>
+
+    <div class="bars-container">
+
+      <div 
+        v-for="(count, index) in matrixData.colCounts" 
+        :key="'col-' + index"
+        class="bar-row"
+      >
+        <span class="label">
+          {{ matrixData.labels[index] }} (Entrada)
+        </span>
+
+        <div class="bar-wrapper">
+          <div 
+            class="bar bar-in"
+           :style="{ width: (count / maxConnections * 100) + '%' }"
+          ></div>
+          <span class="value">{{ count }}</span>
+        </div>
+      </div>
+
+    </div>
 
     <button class="close-btn" @click="showMatrix = false">
       Cerrar
@@ -110,13 +161,67 @@ function generarMatriz() {
   matrixData.value = grafo.generarAnalisisAdyacencia()
   showMatrix.value = true
 }
+
+const maxConnections = computed(() => {
+  if (!matrixData.value) return 1
+  return Math.max(
+    ...matrixData.value.rowCounts,
+    ...matrixData.value.colCounts,
+    1
+  )
+})
+
+/*IMPORTAR - EXPORTAR CON JSON*/ 
+function exportarJSON() {
+  const data = {
+    directed: directed.value,
+    nodes: nodes.value,
+    edges: edges.value
+  }
+
+  const json = JSON.stringify(data, null, 2)
+
+  const blob = new Blob([json], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "grafo.json"
+  a.click()
+
+  URL.revokeObjectURL(url)
+}
+
+
+function importarJSON(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result)
+
+      directed.value = data.directed ?? false
+      nodes.value = data.nodes ?? []
+      edges.value = data.edges ?? []
+
+      console.log("Grafo cargado correctamente")
+    } catch (error) {
+      alert("Archivo JSON inválido")
+    }
+  }
+
+  reader.readAsText(file)
+}
 </script>
 
 <style scoped>
 
 .graph-layout {
   display: flex;
-  height: 100vh;
+  height: auto;
   width: 100%;
   
 }
@@ -124,7 +229,6 @@ function generarMatriz() {
 .panel {
   order: -1; 
 }
-
 
 .modal-overlay {
   position: fixed;
@@ -136,13 +240,17 @@ function generarMatriz() {
   backdrop-filter: blur(4px);
 }
 
+
+
 .modal {
   background: #111827;
   padding: 25px;
   border-radius: 14px;
   color: white;
-  min-width: 500px;
-  max-width: 90%;
+  width: 900px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
@@ -151,8 +259,8 @@ table {
   margin-top: 15px;
   width: 100%;
   text-align: center;
+  font-size: 14px;
 }
-
 th, td {
   border: 1px solid #374151;
   padding: 8px;
@@ -189,4 +297,50 @@ th {
   border-radius: 8px;
   cursor: pointer;
 }
+
+.bars-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.bar-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.bar {
+  height: 16px;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  min-width: 4px;
+}
+
+.bar-out {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.bar-in {
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+
+.value {
+  font-weight: bold;
+  font-size: 13px;
+  min-width: 25px;
+  text-align: right;
+}
+
 </style>

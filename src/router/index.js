@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import Inicio from '../components/Inicio.vue'
 import Algoritmos from '../components/Algoritmos.vue'
 import Grafos from '../components/Grafos.vue'
+import Help from '../components/Help.vue'
 
 const routes = [
   {
@@ -19,7 +20,12 @@ const routes = [
     path: '/grafos',
     name: 'Grafos',
     component: Grafos
-  }
+  },
+  {
+  path: '/help',
+  name: 'Help',
+  component: Help
+}
 ]
 
 const router = createRouter({

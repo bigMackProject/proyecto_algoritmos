@@ -39,38 +39,25 @@ export class Grafo {
   }
 
 
-  generarAnalisisAdyacencia() {
+generarAnalisisAdyacencia() {
   console.log("===== INICIO generarAnalisisAdyacencia =====")
 
-  console.log("NODOS:", this.nodes)
-  console.log("ARISTAS:", this.edges)
-  console.log("DIRIGIDO:", this.directed)
-
   const size = this.nodes.length
-  console.log("SIZE:", size)
 
+  // 1️⃣ Crear matriz primero
   const matrix = Array.from({ length: size }, () =>
     Array(size).fill(0)
   )
 
-  console.log("MATRIX INICIAL:", matrix)
-
   const indexMap = this.getNodeIndexMap()
-  console.log("INDEX MAP:", indexMap)
 
-  // Llenar matriz
+  // 2️⃣ Llenar matriz
   this.edges.forEach(edge => {
     const i = indexMap[edge.from]
     const j = indexMap[edge.to]
     const weight = Number(edge.weight) || 1
 
-    console.log("Procesando arista:", edge)
-    console.log("i:", i, "j:", j, "weight:", weight)
-
-    if (i === undefined || j === undefined) {
-      console.error("ERROR: índice undefined", { i, j, edge })
-      return
-    }
+    if (i === undefined || j === undefined) return
 
     matrix[i][j] += weight
 
@@ -79,16 +66,12 @@ export class Grafo {
     }
   })
 
-  console.log("MATRIX DESPUÉS DE LLENAR:", matrix)
-
-  // Suma filas
+  // 3️⃣ Suma de filas (pesos)
   const rowSums = matrix.map(row =>
     row.reduce((a, b) => a + b, 0)
   )
 
-  console.log("ROW SUMS:", rowSums)
-
-  // Suma columnas
+  // 4️⃣ Suma de columnas (pesos)
   const colSums = Array(size).fill(0)
   for (let j = 0; j < size; j++) {
     for (let i = 0; i < size; i++) {
@@ -96,16 +79,28 @@ export class Grafo {
     }
   }
 
-  console.log("COL SUMS:", colSums)
-
   const maxRow = rowSums.length ? Math.max(...rowSums) : 0
   const maxCol = colSums.length ? Math.max(...colSums) : 0
 
-  console.log("MAX ROW:", maxRow)
-  console.log("MAX COL:", maxCol)
+  // 5️⃣ NUEVO: Conteo de conexiones (≠ 0)
+
+  const rowCounts = matrix.map(row =>
+    row.filter(value => value !== 0).length
+  )
+
+  const colCounts = Array(size).fill(0)
+  for (let j = 0; j < size; j++) {
+    for (let i = 0; i < size; i++) {
+      if (matrix[i][j] !== 0) {
+        colCounts[j]++
+      }
+    }
+  }
+
+  const maxRowCount = rowCounts.length ? Math.max(...rowCounts) : 0
+  const maxColCount = colCounts.length ? Math.max(...colCounts) : 0
 
   const labels = this.nodes.map(n => n.label)
-  console.log("LABELS:", labels)
 
   const resultado = {
     matrix,
@@ -113,6 +108,10 @@ export class Grafo {
     colSums,
     maxRow,
     maxCol,
+    rowCounts,
+    colCounts,
+    maxRowCount,
+    maxColCount,
     labels
   }
 

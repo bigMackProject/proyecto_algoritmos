@@ -67,7 +67,29 @@
         @click="$emit('changeColor', color)"
       ></div>
     </div>
+  <h3>Archivo</h3>
 
+<div class="file-buttons">
+
+  <button 
+    class="file-btn export-btn"
+    @click="$emit('exportar')">
+    <i class="fas fa-download icon"></i>
+    Exportar JSON
+  </button>
+
+  <label class="file-btn import-btn">
+    <i class="fas fa-upload icon"></i>
+    Importar JSON
+    <input
+      type="file"
+      accept=".json"
+      @change="$emit('importar', $event)"
+      hidden
+    />
+  </label>
+
+</div>
   </div>
 </template>
 <script setup>
@@ -93,34 +115,43 @@ const palette = [
 </script>
 <style scoped>
 .panel {
-  width: 270px;
-  background: #1f2937;
+  width: 260px;
+  background: #111827;
   color: #f3f4f6;
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  border-right: 1px solid #374151;
+  border-right: 1px solid #1f2937;
+  transition: 0.3s ease;
 }
 
+/* ===== TITULOS ===== */
+
 h3 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  color: #e5e7eb;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
 }
+
+/* ===== BOTONES GENERALES ===== */
 
 button {
   padding: 8px 10px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  background: #374151;
-  color: #f3f4f6;
+  background: #1f2937;
+  color: #e5e7eb;
+  font-size: 14px;
   transition: 0.2s ease;
 }
 
 button:hover {
-  background: #4b5563;
+  background: #374151;
 }
 
 button.active {
@@ -128,33 +159,28 @@ button.active {
   color: white;
 }
 
+/* ===== GRUPOS ===== */
 
 .button-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .matrix-btn {
-  margin-top: 5px;
   background: #10b981;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-.matrix-btn:disabled {
-  background: #374151;
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ===== TOGGLE ===== */
 
 .toggle-container {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .toggle-container button {
   flex: 1;
-  background: #374151;
 }
 
 .toggleActive {
@@ -162,27 +188,118 @@ button.active {
   color: white;
 }
 
+/* ===== COLORES ===== */
+
 .color-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .color-option {
   width: 100%;
   aspect-ratio: 1/1;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   border: 2px solid transparent;
   transition: 0.2s;
 }
 
 .color-option:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .color-option.selected {
   border: 2px solid #ffffff;
 }
 
+/* ===== ARCHIVOS ===== */
+
+.file-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.export-btn {
+  background: #059669;
+  color: white;
+}
+
+.import-btn {
+  background: #2563eb;
+  color: white;
+}
+
+/* ================================================= */
+/* =================== MOBILE ====================== */
+/* ================================================= */
+
+@media (max-width: 768px) {
+
+  .panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-top: 1px solid #1f2937;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px;
+    gap: 16px;
+    background: #0f172a;
+  }
+
+  /* Ocultar títulos en móvil */
+  h3 {
+    display: none;
+  }
+
+  /* Cada sección como bloque compacto */
+  .button-group,
+  .toggle-container,
+  .color-grid,
+  .file-buttons {
+    flex-direction: row;
+    display: flex;
+    gap: 6px;
+  }
+
+  .color-grid {
+    display: flex;
+  }
+
+  .color-option {
+    width: 28px;
+    height: 28px;
+    aspect-ratio: unset;
+  }
+
+  button,
+  .file-btn {
+    font-size: 12px;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+
+  .matrix-btn {
+    padding: 6px 8px;
+  }
+
+}
 </style>

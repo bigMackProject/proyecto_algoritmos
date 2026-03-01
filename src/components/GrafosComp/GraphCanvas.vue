@@ -400,20 +400,34 @@ function edgeLabelPosition(edge) {
 .canvas {
   flex: 1;
   background: #080c14;
-
-}
-.canvas-container {
-  flex: 1;
-  background: #e5e7eb;
+  position: relative;
+  display: flex;
 }
 
-.graph-canvas {
-  flex: 1;
-}
-
+/* SVG ocupa todo el espacio disponible */
 .graph-svg {
   width: 100%;
   height: 100%;
+  touch-action: none; /* 🔥 importante para drag en móvil */
 }
 
+/* ============================= */
+/* ======= RESPONSIVE ========= */
+/* ============================= */
+
+@media (max-width: 768px) {
+
+  .canvas {
+    height: calc(100vh - 80px); /* espacio para barra inferior */
+  }
+
+}
+
+@media (min-width: 769px) {
+
+  .canvas {
+    height: 100vh;
+  }
+
+}
 </style>

@@ -18,6 +18,7 @@
           <router-link to="/">Inicio</router-link>
           <router-link to="/algoritmos">Algoritmos</router-link>
           <router-link to="/grafos">Grafos</router-link>
+          <router-link to="/help">Help</router-link>
         </nav>
       </div>
     </header>
