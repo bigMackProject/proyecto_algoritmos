@@ -1,6 +1,3 @@
-<script setup>
-</script>
-
 <template>
   <div class="layout">
 
@@ -23,6 +20,7 @@
       </div>
     </header>
 
+    
     <main class="main">
       <div class="container">
         <router-view />
@@ -41,7 +39,6 @@
 
 <script setup>
 import { ref } from 'vue'
-
 const menuOpen = ref(false)
 </script>
 
@@ -184,3 +181,4 @@ const menuOpen = ref(false)
   }
 }
 </style>
+

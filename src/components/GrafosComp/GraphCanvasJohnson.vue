@@ -24,7 +24,7 @@
   <path
     v-if="edge.from === edge.to"
     :d="loopPath(edge)"
-    :stroke="edge.color"
+    :stroke="edge.holgura === 0 ? '#dc2626' : edge.color"
     stroke-width="2.5"
     fill="none"
   />
@@ -50,19 +50,29 @@
   />
 
   <text
-    :x="edgeLabelPosition(edge).x"
-    :y="edgeLabelPosition(edge).y"
-    font-size="13"
-    fill="white"
-    font-weight="600"
-  >
-    {{ edge.weight }}
-  </text>
+  :x="edgeLabelPosition(edge).x"
+  :y="edgeLabelPosition(edge).y"
+  font-size="13"
+  fill="white"
+  font-weight="600"
+>
+  {{ edge.duracion }}
+</text>
+
+<text
+  v-if="edge.holgura !== undefined"
+  :x="edgeLabelPosition(edge).x"
+  :y="edgeLabelPosition(edge).y + 15"
+  font-size="11"
+  fill="#fbbf24"
+>
+  h={{ edge.holgura }}
+</text>
   
   <polygon
     v-if="directed"
     :points="arrowPoints(edge)"
-    :fill="edge.color"
+    :fill="edge.holgura === 0 ? '#dc2626' : edge.color"
   />
 
 </g>
@@ -79,37 +89,81 @@
         stroke-dasharray="5"
       />
 
-      <!-- NODOS 1-->
-      <g
-  v-for="node in nodes"
-  :key="node.id"
-  @mousedown.stop="startDrag(node)"
-  @click.stop="handleNodeClick(node)"
->
+      <!-- Nodos johnson-->
+        <g
+        v-for="node in nodes"
+        :key="node.id"
+        @mousedown.stop="startDrag(node)"
+        @click.stop="handleNodeClick(node)"
+        >
 
-     <circle
-  :cx="node.x"
-  :cy="node.y"
-  r="20"
-  :fill="node.color"
-  stroke="#1f2937"
-  stroke-width="2"
-  style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer;"
-/>
+        <circle
+        :cx="node.x"
+        :cy="node.y"
+        r="35"
+        :fill="node.color"
+        :stroke="node.holgura === 0 ? '#dc2626' : '#1f2937'"
+        stroke-width="3"
+        style="cursor:pointer;"
+        />
 
-<text
-  :x="node.x"
-  :y="node.y + 5"
-  text-anchor="middle"
-  font-size="13"
-  font-weight="600"
-  fill="white"
-  pointer-events="none"
->
-  {{ node.label}}
-</text>
+        <!-- Línea horizontal (divide arriba y abajo) -->
+        <line
+        :x1="node.x - 35"
+        :y1="node.y"
+        :x2="node.x + 35"
+        :y2="node.y"
+        stroke="#1f2937"
+        stroke-width="2"
+        />
 
-</g>
+        <!-- Línea vertical SOLO en la parte inferior -->
+        <line
+        :x1="node.x"
+        :y1="node.y"
+        :x2="node.x"
+        :y2="node.y + 35"
+        stroke="#1f2937"
+        stroke-width="2"
+        />
+
+        <!-- TEXTO SUPERIOR (label grande centrado) -->
+        <text
+        :x="node.x"
+        :y="node.y - 10"
+        text-anchor="middle"
+        font-size="13"
+        font-weight="700"
+        fill="white"
+        >
+        {{ node.label }}
+        </text>
+
+        <!-- CUADRANTE 3 (inicio temprano) -->
+        <text
+        :x="node.x - 12"
+        :y="node.y + 20"
+        text-anchor="middle"
+        font-size="13"
+        font-weight="700"
+        fill="white"
+        >
+        {{ node.inicioTemprano ?? '' }}
+        </text>
+
+        <!-- CUADRANTE 4 (inicio tardío) -->
+        <text
+        :x="node.x + 12"
+        :y="node.y + 20"
+        text-anchor="middle"
+        font-size="13"
+        font-weight="700"
+        fill="white"
+        >
+        {{ node.inicioTardio ?? '' }}
+        </text>
+
+        </g>
 
     </svg>
 
@@ -225,14 +279,18 @@ function handleCanvasClick(e) {
     name = name.trim()        
   }
 
-  const newNode = {
+    const newNode = {
     id: Date.now(),
     x,
     y,
     label: name,
-    color: props.selectedColor
-  }
+    color: props.selectedColor,
 
+    // CAMPOS JOHNSON
+    inicioTemprano: 0,
+    inicioTardio: 0,
+    holgura: 0
+    }
   emit('updateNodes', [...props.nodes, newNode])
 }
 
@@ -269,24 +327,27 @@ function handleNodeClick(node) {
     return
   }
 
-  let weight = prompt("Peso de la arista (solo números):", "1")
+  let input = prompt("Duración de la arista:", "1")
 
-  if (isNaN(weight) || weight === "" || weight === null) {
-    alert("¡Ingresa solo números para el peso!")
+    if (input === null) {
     selectedNode.value = null
     tempConnection.value = null
     return
-  }
+    }
+
+    input = input.trim()
+
+    if (!/^\d+(\.\d+)?$/.test(input)) {
+    alert("Ingresa solo números válidos.")
+    selectedNode.value = null
+    tempConnection.value = null
+    return
+    }
+
+    const duracion = Number(input)
 
   const exists = props.edges.some(e =>
-    props.directed
-      ? (e.from === selectedNode.value.id && e.to === node.id)
-      : (
-          (e.from === selectedNode.value.id && e.to === node.id) ||
-          (e.from === node.id && e.to === selectedNode.value.id)
-        )
-  )
-
+  e.from === selectedNode.value.id && e.to === node.id)
   if (exists) {
     selectedNode.value = null
     tempConnection.value = null
@@ -298,7 +359,8 @@ function handleNodeClick(node) {
     id: Date.now(),
     from: selectedNode.value.id,
     to: node.id,
-    weight: Number(weight),
+    duracion,
+    holgura: 0,
     color: props.selectedColor
   }
 
@@ -317,32 +379,26 @@ function getNode(id) {
   return props.nodes.find(n => n.id === id)
 }
 
-function isBidirectional(edge) {
-  return props.edges.some(e =>
-    e.from === edge.to && e.to === edge.from
-  )
-}
-
 function offsetLine(edge) {
   const from = getNode(edge.from)
   const to = getNode(edge.to)
+
+  const r = 20 // radio del nodo
 
   const dx = to.x - from.x
   const dy = to.y - from.y
   const dist = Math.sqrt(dx * dx + dy * dy)
 
-  const offset = isBidirectional(edge) ? 10 : 0
-  const offsetX = -dy / dist * offset
-  const offsetY = dx / dist * offset
+  const normX = dx / dist
+  const normY = dy / dist
 
   return {
-    x1: from.x + offsetX,
-    y1: from.y + offsetY,
-    x2: to.x + offsetX,
-    y2: to.y + offsetY
+    x1: from.x + normX * r,
+    y1: from.y + normY * r,
+    x2: to.x - normX * r,
+    y2: to.y - normY * r
   }
 }
-
 function arrowPoints(edge) {
   const pos = offsetLine(edge)
 
@@ -391,7 +447,6 @@ function edgeLabelPosition(edge) {
     y: (pos.y1 + pos.y2) / 2 - 5
   }
 }
-
 
 </script>
 

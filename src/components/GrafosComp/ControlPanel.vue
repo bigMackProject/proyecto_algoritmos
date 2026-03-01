@@ -6,39 +6,48 @@
 
     <div class="button-group">
      <button 
-  :class="{ active: mode === 'draw' }"
-  @click="$emit('changeMode', 'draw')">
-  <i class="fas fa-pencil-alt icon"></i>
-  Dibujar
-</button>
+      :class="{ active: mode === 'draw' }"
+      @click="$emit('changeMode', 'draw')">
+      <i class="fas fa-pencil-alt icon"></i>
+      Dibujar
+    </button>
 
-<button 
-  :class="{ active: mode === 'edit' }"
-  @click="$emit('changeMode', 'edit')">
-  <i class="fas fa-pen icon"></i>
-  Editar
-</button>
+    <button 
+      :class="{ active: mode === 'edit' }"
+      @click="$emit('changeMode', 'edit')">
+      <i class="fas fa-pen icon"></i>
+      Editar
+    </button>
 
-<button 
-  :class="{ active: mode === 'delete' }"
-  @click="$emit('changeMode', 'delete')">
-  <i class="fas fa-eraser icon"></i>
-  Borrar
-</button>
-<button 
-  class="matrix-btn"
-  @click="$emit('generateMatrix')">
-  <i class="fas fa-table icon"></i>
-  Generar
-</button>
-  
+    <button 
+      :class="{ active: mode === 'delete' }"
+      @click="$emit('changeMode', 'delete')">
+      <i class="fas fa-eraser icon"></i>
+      Borrar
+    </button>
+    <button 
+      v-if="mostrarMatriz"
+      class="matrix-btn"
+
+      @click="$emit('generateMatrix')">
+      <i class="fas fa-table icon"></i>
+      Generar Matriz
+    </button>
+    <button 
+      class="matrix-btn"
+      v-if="mostrarJohnson"
+      @click="$emit('calcularJohnson')">
+      <i class="fas fa-play icon"></i>
+      Calcular Johnson
+    </button>
+      
     </div>
 
     <hr />
 
-    <h3>Tipo de Grafo</h3>
+    <h3 v-if="mostrarDirigido">Tipo de Grafo</h3>
 
-    <div class="toggle-container">
+    <div class="toggle-container" v-if="mostrarDirigido">
       <button
         :class="{ toggleActive: !directed }"
         @click="$emit('toggleDirected', false)">
@@ -93,13 +102,25 @@
   </div>
 </template>
 <script setup>
+
+
 const emit = defineEmits([
   'changeMode',
   'toggleDirected',
   'changeColor',
-  'generateMatrix'
+  'generateMatrix',
+  'calcularJohnson',  
+  'exportar',
+  'importar'
 ])
-defineProps(['mode', 'directed', 'selectedColor'])
+defineProps([
+  'mode', 
+  'directed', 
+  'selectedColor',
+  'mostrarMatriz',     
+  'mostrarJohnson',
+  'mostrarDirigido'
+])
 
 const palette = [
   '#3b82f6',
@@ -112,6 +133,8 @@ const palette = [
   '#f97316',
   '#ffffff'
 ]
+
+
 </script>
 <style scoped>
 .panel {

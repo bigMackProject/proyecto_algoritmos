@@ -1,21 +1,53 @@
 <template>
   
+  <div class="mini-navbar">
+  <button
+    :class="{ active: algoritmoActivo === 'normal' }"
+    @click="algoritmoActivo = 'normal'"
+  >
+    Grafo Normal
+  </button>
+
+  <button
+    :class="{ active: algoritmoActivo === 'johnson' }"
+    @click="algoritmoActivo = 'johnson'"
+  >
+    Johnson
+  </button>
+</div>
+
   <div class="graph-layout">
+    <!-- GRAFO NORMAL -->
     <GraphCanvas
-      :nodes="nodes"
-      :edges="edges"
+      v-if="algoritmoActivo === 'normal'"
+      :nodes="nodesNormal"
+      :edges="edgesNormal"
       :mode="mode"
       :directed="directed"
       :selectedColor="selectedColor"
-      @updateNodes="nodes = $event"
-      @updateEdges="edges = $event"
+      @updateNodes="nodesNormal = $event"
+      @updateEdges="edgesNormal = $event"
+    />
 
+    <!-- JOHNSON -->
+    <GraphCanvasJohnson
+      v-else
+      :nodes="nodesJohnson"
+      :edges="edgesJohnson"
+      :mode="mode"
+      :selectedColor="selectedColor"
+      @updateNodes="nodesJohnson = $event"
+      @updateEdges="edgesJohnson = $event"
+      :directed="true"
     />
 
     <ControlPanel
       :mode="mode"
       :directed="directed"
       :selectedColor="selectedColor"
+      :mostrarMatriz="algoritmoActivo === 'normal'"
+      :mostrarJohnson="algoritmoActivo === 'johnson'"
+      :mostrarDirigido="algoritmoActivo === 'normal'" 
       @changeMode="mode = $event"
       @toggleDirected="directed = $event"
       @changeColor="selectedColor = $event"
@@ -23,6 +55,7 @@
       @updateMode="mode = $event"
       @exportar="exportarJSON"
       @importar="importarJSON"
+      @calcularJohnson="ejecutarJohnson" 
     />
 
   </div>
@@ -135,10 +168,17 @@ import { ref, computed } from 'vue'
 import GraphCanvas from './GrafosComp/GraphCanvas.vue'
 import ControlPanel from './GrafosComp/ControlPanel.vue'
 import { Grafo } from '../models/Grafo'
+import GraphCanvasJohnson from './GrafosComp/GraphCanvasJohnson.vue'
 
 
-const nodes = ref([])
-const edges = ref([])
+// GRAFO NORMAL
+const nodesNormal = ref([])
+const edgesNormal = ref([])
+
+// JOHNSON
+const nodesJohnson = ref([])
+const edgesJohnson = ref([])
+
 const mode = ref('draw') 
 const directed = ref(false)
 const selectedColor = ref('#3b82f6')
@@ -147,14 +187,20 @@ const selectedColor = ref('#3b82f6')
 const showMatrix = ref(false)
 const matrixData = ref(null)
 
+const algoritmoActivo = ref('normal')
+
 /* ======= FUNCIÓN ======= */
 
 function generarMatriz() {
-  console.log("LLEGA AL PADRE")
+
+  if (algoritmoActivo.value !== 'normal') {
+    alert("La matriz solo está disponible para el Grafo Normal")
+    return
+  }
 
   const grafo = new Grafo(
-    nodes.value,
-    edges.value,
+    nodesNormal.value,
+    edgesNormal.value,
     directed.value
   )
 
@@ -162,21 +208,153 @@ function generarMatriz() {
   showMatrix.value = true
 }
 
-const maxConnections = computed(() => {
-  if (!matrixData.value) return 1
-  return Math.max(
-    ...matrixData.value.rowCounts,
-    ...matrixData.value.colCounts,
-    1
+/*Calculo johnson*/
+
+function topologicalSort(nodes, edges) {
+
+  const inDegree = {}
+  nodes.forEach(n => inDegree[n.id] = 0)
+
+  edges.forEach(e => {
+    inDegree[e.to]++
+  })
+
+  const queue = nodes.filter(n => inDegree[n.id] === 0)
+  const orden = []
+
+  while (queue.length > 0) {
+    const nodo = queue.shift()
+    orden.push(nodo)
+
+    edges
+      .filter(e => e.from === nodo.id)
+      .forEach(e => {
+        inDegree[e.to]--
+        if (inDegree[e.to] === 0) {
+          queue.push(nodes.find(n => n.id === e.to))
+        }
+      })
+  }
+
+  if (orden.length !== nodes.length) {
+    alert("El grafo tiene ciclos. Johnson requiere un DAG.")
+    return []
+  }
+
+  return orden
+}
+function ejecutarJohnson() {
+
+  if (algoritmoActivo.value !== 'johnson') {
+    alert("Cambia al modo Johnson primero")
+    return
+  }
+
+  const nodos = [...nodesJohnson.value]
+  const aristas = [...edgesJohnson.value]
+
+  if (nodos.length === 0) {
+    alert("No hay nodos")
+    return
+  }
+
+  const orden = topologicalSort(nodos, aristas)
+
+  // ===== ADELANTE =====
+  orden.forEach(n => n.inicioTemprano = 0)
+
+  orden.forEach(nodo => {
+    const entrantes = aristas.filter(a => a.to === nodo.id)
+
+    if (entrantes.length > 0) {
+      nodo.inicioTemprano = Math.max(
+        ...entrantes.map(a => {
+          const anterior = orden.find(n => n.id === a.from)
+          return anterior.inicioTemprano + a.duracion
+        })
+      )
+    }
+  })
+
+  const nodosFinales = orden.filter(n =>
+  !aristas.some(a => a.from === n.id)
+)
+
+const duracionTotal = Math.max(
+  ...nodosFinales.map(n => n.inicioTemprano)
+)
+
+  orden.forEach(n => n.inicioTardio = duracionTotal)
+
+  // ===== ATRÁS =====
+  for (let i = orden.length - 1; i >= 0; i--) {
+    const nodo = orden[i]
+    const salientes = aristas.filter(a => a.from === nodo.id)
+
+    if (salientes.length > 0) {
+      nodo.inicioTardio = Math.min(
+        ...salientes.map(a => {
+          const siguiente = orden.find(n => n.id === a.to)
+          return siguiente.inicioTardio - a.duracion
+        })
+      )
+    }
+  }
+
+  // ===== HOLGURA NODOS =====
+  orden.forEach(n => {
+    n.holgura = n.inicioTardio - n.inicioTemprano
+  })
+
+  // ===== HOLGURA ARISTAS =====
+  aristas.forEach(a => {
+    const fromNode = orden.find(n => n.id === a.from)
+    const toNode = orden.find(n => n.id === a.to)
+
+    a.holgura =
+      toNode.inicioTardio -
+      fromNode.inicioTemprano -
+      a.duracion
+  })
+
+  nodesJohnson.value = [...orden]
+  edgesJohnson.value = [...aristas]
+
+  // ===== CAMINO CRÍTICO =====
+  const caminoCritico = []
+
+let actual = orden.find(n =>
+  n.holgura === 0 &&
+  !aristas.some(a => a.to === n.id)
+)
+
+while (actual) {
+  caminoCritico.push(actual.label)
+
+  const siguienteArista = aristas.find(a =>
+    a.from === actual.id &&
+    a.holgura === 0
   )
-})
+
+  if (!siguienteArista) break
+
+  actual = orden.find(n => n.id === siguienteArista.to)
+}
+
+  alert("Camino Crítico:\n" + caminoCritico.join(" → "))
+}
 
 /*IMPORTAR - EXPORTAR CON JSON*/ 
 function exportarJSON() {
   const data = {
     directed: directed.value,
-    nodes: nodes.value,
-    edges: edges.value
+    nodes: algoritmoActivo.value === 'normal'
+  ? nodesNormal.value
+  : nodesJohnson.value,
+
+    edges: algoritmoActivo.value === 'normal'
+  ? edgesNormal.value
+  : edgesJohnson.value
   }
 
   const json = JSON.stringify(data, null, 2)
@@ -204,8 +382,13 @@ function importarJSON(event) {
       const data = JSON.parse(e.target.result)
 
       directed.value = data.directed ?? false
-      nodes.value = data.nodes ?? []
-      edges.value = data.edges ?? []
+      if (algoritmoActivo.value === 'normal') {
+          nodesNormal.value = data.nodes ?? []
+          edgesNormal.value = data.edges ?? []
+        } else {
+          nodesJohnson.value = data.nodes ?? []
+          edgesJohnson.value = data.edges ?? []
+        }
 
       console.log("Grafo cargado correctamente")
     } catch (error) {
@@ -343,4 +526,25 @@ th {
   text-align: right;
 }
 
+.mini-navbar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mini-navbar button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #9ca3af;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mini-navbar button.active {
+  background: #3b82f6;
+  color: white;
+}
 </style>
